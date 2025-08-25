@@ -1,47 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import './styles/theme.css';
+import Sidebar from './components/layout/Sidebar';
+import Header from './components/layout/Header';
+import AppRoutes from './routes';
 
 // PUBLIC_INTERFACE
 function App() {
-  const [theme, setTheme] = useState('light');
+  /** Light theme by default, persisted to localStorage. */
+  const [theme, setTheme] = useState(() => {
+    const saved = typeof window !== 'undefined' ? window.localStorage.getItem('theme') : null;
+    return saved || 'light';
+  });
 
-  // Effect to apply theme to document element
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    try { window.localStorage.setItem('theme', theme); } catch {}
   }, [theme]);
 
   // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+
+  const headerActions = useMemo(
+    () => ({ theme, toggleTheme }),
+    [theme]
+  );
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div className="app-shell" data-theme={theme}>
+      <aside className="app-sidebar">
+        <Sidebar />
+      </aside>
+      <header className="app-header">
+        <Header actions={headerActions} />
       </header>
+      <main className="app-main">
+        <div className="container">
+          <AppRoutes />
+        </div>
+      </main>
     </div>
   );
 }
